@@ -107,7 +107,7 @@ def main():
         "result": {
             "protocolVersion": "2024-11-05",
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "mcp-local-vision", "version": "1.0.0"}
+            "serverInfo": {"name": "local-vision", "version": "1.0.0"}
         }
     }
     send(init_result)
