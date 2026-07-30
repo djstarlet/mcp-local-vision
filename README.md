@@ -1,8 +1,8 @@
 # mcp-local-vision
 
 MCP server that lets any text-only agent describe images by calling a local
-llama.cpp vision model (MiniCPM-V, LLaVA, etc.) through its OpenAI-compatible
-API.
+llama.cpp vision model (tested with Qwen 3.5 4B, also works with MiniCPM-V,
+LLaVA, etc.) through its OpenAI-compatible API.
 
 No special model config needed — agents just call `vision_describe("path.png")`
 and get back a text description from the vision model.
