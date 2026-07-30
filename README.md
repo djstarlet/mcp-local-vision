@@ -36,6 +36,18 @@ and get back a text description from the vision model.
 
 3. Restart opencode. Now any agent can call `vision_describe`.
 
+## Agent auto-install
+
+To have an AI coding agent install and configure this for you, see
+[INSTALL.md](INSTALL.md) — it includes a full prompt template.
+
+You **must** tell the agent:
+- Your llama.cpp server URL (e.g. `http://localhost:8080/v1/chat/completions`)
+- Your vision model alias from `modelfile.ini` (e.g. `OBSERVER`)
+- The local path to clone into
+
+The agent cannot guess your model name or server address.
+
 ## Configuration
 
 Create `config.json` in this directory (copy `config.json.example`):
