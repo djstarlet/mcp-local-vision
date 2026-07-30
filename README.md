@@ -38,15 +38,15 @@ and get back a text description from the vision model.
 
 ## Agent auto-install
 
-To have an AI coding agent install and configure this for you, see
-[INSTALL.md](INSTALL.md) — it includes a full prompt template.
+Tell your AI agent:
 
-You **must** tell the agent:
-- Your llama.cpp server URL (e.g. `http://localhost:8080/v1/chat/completions`)
-- Your vision model alias from `modelfile.ini` (e.g. `OBSERVER`)
-- The local path to clone into
+```
+Install and configure mcp-local-vision -
+https://github.com/djstarlet/mcp-local-vision/src/branch/main/INSTALL.md
+```
 
-The agent cannot guess your model name or server address.
+The agent will fetch INSTALL.md and walk through the steps. You'll need to
+provide your server URL and model alias when asked.
 
 ## Configuration
 

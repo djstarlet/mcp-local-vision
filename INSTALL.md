@@ -1,58 +1,47 @@
-# Agent-assisted installation
+# Install mcp-local-vision
 
-Copy the following prompt to have your AI coding agent install
-mcp-local-vision in any project.
+Instructions for an AI agent.
 
-> You need to provide your model path (GGUF + mmproj files) since
-> the agent cannot know your local file layout.
+## Required from user
 
----
+The user must provide:
+- **llama.cpp server URL** — e.g. `http://localhost:8080/v1/chat/completions`
+- **Vision model alias** — from their `modelfile.ini`, e.g. `OBSERVER`
+- **Clone path** — where to clone the repo (default: `~/projects/mcp-local-vision`)
 
-## Prompt template
+If the user didn't include these, ask for them before proceeding.
 
-```
-Install mcp-local-vision into this project from
-https://github.com/djstarlet/mcp-local-vision
+## Steps
 
-Steps:
-1. Clone the repo into a local directory (e.g. ~/projects/mcp-local-vision)
-2. Create config.json in that directory with:
-   - vision_api_url: the URL of my llama.cpp server running a vision model
-   - vision_model: the model alias from my modelfile.ini (e.g. OBSERVER)
-3. Add the MCP server config to opencode.jsonc:
-   "mcp": {
-     "local-vision": {
-       "type": "local",
-       "command": ["python3", "/path/to/mcp-local-vision/server.py"],
-       "enabled": true
-     }
-   }
-4. Confirm the llama.cpp server is running with --host 0.0.0.0 --port 8080
-```
-
-### You must tell the agent
-
-| What | Example |
-|------|---------|
-| llama.cpp server URL | `http://my-server:8080/v1/chat/completions` |
-| Vision model alias | `OBSERVER` |
-| Local clone path | `/home/me/projects/mcp-local-vision` |
-
----
-
-## Manual install
+### 1. Clone the repo
 
 ```bash
-# clone
-git clone https://github.com/djstarlet/mcp-local-vision.git ~/projects/mcp-local-vision
+git clone https://github.com/djstarlet/mcp-local-vision.git <clone-path>
+```
 
-# configure
-cp ~/projects/mcp-local-vision/config.json.example \
-   ~/projects/mcp-local-vision/config.json
-# edit config.json with your server URL and model name
+### 2. Create config.json
 
-# add to opencode.jsonc:
-# "mcp": { "local-vision": { "type": "local",
-#   "command": ["python3", "/path/to/mcp-local-vision/server.py"],
-#   "enabled": true } }
+Write `<clone-path>/config.json`:
+
+```json
+{
+  "vision_api_url": "<server URL from user>",
+  "vision_model": "<model alias from user>",
+  "vision_max_tokens": 2048,
+  "vision_timeout": 180
+}
+```
+
+### 3. Add to opencode.jsonc
+
+Find the project's `opencode.jsonc` (or `.opencode.jsonc`) and add:
+
+```jsonc
+"mcp": {
+  "local-vision": {
+    "type": "local",
+    "command": ["python3", "<clone-path>/server.py"],
+    "enabled": true
+  }
+}
 ```
