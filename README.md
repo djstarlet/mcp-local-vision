@@ -61,11 +61,15 @@ Create `config.json` in this directory (copy `config.json.example`):
 }
 ```
 
+`vision_model` is just a label passed to the OpenAI-compatible API. If you
+run a single model directly with `llama-server`, any value works — set it to
+`"model"`, `"OBSERVER"`, or whatever you like.
+
 All values can also be overridden via environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `VISION_API_URL` | `http://localhost:8080/v1/chat/completions` | OpenAI-compatible endpoint |
-| `VISION_MODEL` | `OBSERVER` | Model name on the server |
+| `VISION_MODEL` | `OBSERVER` | Model label (any value works for single-model servers) |
 | `VISION_MAX_TOKENS` | `2048` | Max response tokens |
 | `VISION_TIMEOUT` | `180` | API timeout in seconds |
