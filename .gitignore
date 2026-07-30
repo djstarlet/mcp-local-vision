@@ -1,4 +1,5 @@
 __pycache__/
 *.pyc
 .env
+config.json
 /tmp/mcp-vision-payload.json
