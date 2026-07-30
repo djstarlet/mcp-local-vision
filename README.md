@@ -30,7 +30,19 @@ and get back a text description from the vision model.
 
 3. Restart opencode. Now any agent can call `vision_describe`.
 
-## Agent auto-install
+## Subagent access
+
+Subagents (e.g. `@observer`, `@fixer`) need the `mcp` tool group to use
+MCP tools. Add it to their config in `opencode.jsonc` or your agent preset:
+
+```jsonc
+"observer": {
+  "model": "...",
+  "toolGroups": ["mcp", "read"]  // <-- "mcp" grants MCP tool access
+}
+```
+
+This lets the subagent call `vision_describe` via any configured MCP server.
 
 Tell your AI agent:
 
