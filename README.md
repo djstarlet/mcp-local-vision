@@ -36,11 +36,24 @@ and get back a text description from the vision model.
 
 3. Restart opencode. Now any agent can call `vision_describe`.
 
-## Config via environment
+## Configuration
+
+Create `config.json` in this directory (copy `config.json.example`):
+
+```json
+{
+  "vision_api_url": "http://your-server:8080/v1/chat/completions",
+  "vision_model": "OBSERVER",
+  "vision_max_tokens": 2048,
+  "vision_timeout": 180
+}
+```
+
+All values can also be overridden via environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `VISION_API_URL` | `http://localhost:8080/v1/chat/completions` | OpenAI-compatible endpoint |
 | `VISION_MODEL` | `OBSERVER` | Model name on the server |
-| `VISION_MAX_TOKENS` | `800` | Max response tokens |
+| `VISION_MAX_TOKENS` | `2048` | Max response tokens |
 | `VISION_TIMEOUT` | `180` | API timeout in seconds |
