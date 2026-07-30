@@ -7,12 +7,6 @@ LLaVA, etc.) through its OpenAI-compatible API.
 No special model config needed — agents just call `vision_describe("path.png")`
 and get back a text description from the vision model.
 
-## Tools
-
-| Tool | Description |
-|------|-------------|
-| `vision_describe(file_path, prompt?)` | Describe an image via the local vision model |
-
 ## Setup
 
 1. Have a llama.cpp server running with a vision model (e.g. MiniCPM-V 4.6):
