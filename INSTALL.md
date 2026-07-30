@@ -6,7 +6,7 @@ Instructions for an AI agent.
 
 The user must provide:
 - **llama.cpp server URL** — e.g. `http://localhost:8080/v1/chat/completions`
-- **Vision model alias** — from their `modelfile.ini`, e.g. `OBSERVER`
+- **Vision model name** — the model name your llama.cpp server expects, e.g. `OBSERVER`
 - **Clone path** — where to clone the repo (default: `~/projects/mcp-local-vision`)
 
 If the user didn't include these, ask for them before proceeding.
@@ -26,7 +26,7 @@ Write `<clone-path>/config.json`:
 ```json
 {
   "vision_api_url": "<server URL from user>",
-  "vision_model": "<model alias from user>",
+  "vision_model": "<model name from user>",
   "vision_max_tokens": 2048,
   "vision_timeout": 180
 }
