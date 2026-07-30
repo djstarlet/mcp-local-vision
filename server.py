@@ -1,16 +1,9 @@
 #!/usr/bin/env python3
-"""MCP server: local vision analysis via llama.cpp vision model.
-
-Exposes the `vision_describe` tool — any agent (text-only or not) can
-describe an image by passing its file path. The base64 encoding and API
-call happen on this server side, so the calling model never needs vision
-capabilities.
-"""
+"""MCP server: local vision analysis via llama.cpp vision model."""
 
 import json
 import sys
 import base64
-import struct
 import subprocess
 import os
 
@@ -24,23 +17,21 @@ TIMEOUT = int(os.environ.get("VISION_TIMEOUT", "180"))
 
 
 # ── MCP transport helpers ──────────────────────────────────────────
+# opencode uses newline-delimited JSON on stdio (NOT the 4-byte length-prefix format)
 
 def send(msg: dict):
-    """Send a JSON-RPC message over stdout with MCP length prefix."""
+    """Send a JSON-RPC message line to stdout."""
     data = json.dumps(msg, ensure_ascii=False)
-    header = struct.pack(">I", len(data))
-    sys.stdout.buffer.write(header + data.encode("utf-8"))
-    sys.stdout.buffer.flush()
+    sys.stdout.write(data + "\n")
+    sys.stdout.flush()
 
 
 def recv() -> dict | None:
-    """Read a JSON-RPC message from stdin with MCP length prefix."""
-    raw = sys.stdin.buffer.read(4)
-    if not raw or len(raw) < 4:
+    """Read a JSON-RPC message line from stdin."""
+    line = sys.stdin.readline()
+    if not line:
         return None
-    length = struct.unpack(">I", raw)[0]
-    payload = sys.stdin.buffer.read(length)
-    return json.loads(payload.decode("utf-8"))
+    return json.loads(line.strip())
 
 
 # ── Vision API call ────────────────────────────────────────────────
