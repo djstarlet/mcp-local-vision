@@ -32,11 +32,11 @@ and get back a text description from the vision model.
 
 ## Subagent access
 
-Subagents (e.g. `@observer`, `@fixer`) need the `mcp` tool group to use
+Subagents (e.g. `@vision`, `@observer`) need the `mcp` tool group to use
 MCP tools. Add it to their config in `opencode.jsonc` or your agent preset:
 
 ```jsonc
-"observer": {
+"<subagent-name>": {
   "model": "...",
   "toolGroups": ["mcp", "read"]  // <-- "mcp" grants MCP tool access
 }
