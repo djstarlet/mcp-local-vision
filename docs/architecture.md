@@ -64,6 +64,12 @@ agent ──tools/call──▶ any MCP client ──MCP stdio──▶ server.p
 - **Lifecycle:** the SDK handles `initialize`, `tools/list`, `tools/call`, `shutdown`, notifications, and error codes. `server.py` only registers `vision_describe` via `@mcp.tool()` and calls `mcp.run()`.
 - **Server identity:** `MCPServer("local-vision")`; protocol version and server version are SDK defaults.
 
+## Platforms
+
+- **MCP path** (`server.py` + the `mcp` package) is pure Python and runs on Linux, macOS, and Windows with Python 3.10+ — no bash, curl, or temp-file dependency.
+- **Bash helpers** (`describe.sh`, `start.sh`) are Linux/macOS only; on Windows they would need Git Bash or WSL, and they are not required for MCP use.
+- **llama.cpp backend** runs on all three: native Windows builds, macOS (Metal), Linux (CUDA/ROCm/CPU).
+
 ## Vision API Payload
 
 The request sent to the model endpoint mirrors the OpenAI chat-completions format:

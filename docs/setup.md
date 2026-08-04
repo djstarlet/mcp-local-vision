@@ -12,7 +12,7 @@ Beyond the `mcp` package the server has no Python dependencies — the vision AP
 
 ## Prerequisites
 
-1. **Python 3.10+**.
+1. **Python 3.10+** on any OS — Linux, macOS, or Windows.
 2. **The `mcp` package** — `pip install mcp`. Works with both mcp 1.x (FastMCP) and 2.x (MCPServer); no version pin.
 3. **A running llama.cpp server** with a vision model loaded (see [Start the Vision Backend](#start-the-vision-backend)).
 4. **An MCP client** — opencode, Claude Code, Codex, VS Code, Cline, Cursor, or any client that speaks standard MCP stdio.
@@ -63,7 +63,10 @@ Beyond the `mcp` package the server has no Python dependencies — the vision AP
 
    Every harness on the market uses the same pair — if yours isn't listed, put `python3 /path/to/mcp-local-vision/server.py` into its MCP/stdio server settings. See [INSTALL.md](../INSTALL.md) for the full agent-driven install.
 
-   > **Note:** on Windows, use `python` (or the full path to `python.exe`) as the command — `python3` usually does not exist there.
+   > **Platform notes:**
+   > - **Windows:** use `python` (or `py -3`) as the command — `python3` usually does not exist there. Install Python from [python.org](https://www.python.org/downloads/).
+   > - **macOS:** install Python via Homebrew (`brew install python`); the system `python3` may be a Command Line Tools stub or lack pip.
+   > - **Linux:** if `pip install` fails with "externally-managed-environment" (PEP 668 — Ubuntu 23.04+, Debian 12+, Fedora), use a venv (`python3 -m venv .venv && .venv/bin/pip install mcp`) or pipx, and point the command pair at the venv's python.
 
 6. Restart the client — MCP configuration is not hot-reloaded.
 
@@ -120,7 +123,9 @@ python3 server.py
    ./describe.sh /path/to/test-image.png
    ```
 
-   A description on stdout means the backend and config are correct. Note this script is independent of the MCP server.
+   A description on stdout means the backend and config are correct. Note this
+   script is independent of the MCP server — it needs bash (Linux/macOS only;
+   Git Bash or WSL on Windows) and is not required for MCP use.
 
 2. **Exercise the MCP protocol** with a small Python SDK client. This is the mcp 1.x form (`ClientSession`); on mcp 2.x the class was renamed to `Client` — adjust the import:
 

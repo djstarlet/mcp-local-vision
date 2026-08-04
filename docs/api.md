@@ -14,6 +14,7 @@ The server exposes exactly one tool, `vision_describe`, registered with the offi
 
 - **Python 3.10+** — the server uses `int | None` union syntax and `tuple[int, int]` generics.
 - **`mcp` package** — install with `pip install mcp`. No version pin: the import shim accepts both mcp 1.x (`FastMCP`) and mcp 2.x (`MCPServer`, the renamed `FastMCP`).
+- **Platforms** — runs on Linux, macOS, and Windows: the server is pure Python, so any Python 3.10+ environment works.
 
 ## Server Identity
 

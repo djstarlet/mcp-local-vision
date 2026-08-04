@@ -36,10 +36,21 @@ This document collects the pitfalls, sharp edges, and known issues of mcp-local-
 - **Symptom:** `describe.sh` returns `File not found` for valid paths with spaces or special characters.
   **Fix:** The script interpolates the path into inline Python without quoting. Quote the argument when calling from scripts. Note that `describe.sh` is a standalone convenience — the MCP server never invokes it, so fixing the script does not affect the MCP path.
 
+## Platform-Specific
+
+- **Symptom:** `pip install mcp` fails with "externally-managed-environment" on Linux (Ubuntu 23.04+, Debian 12+, Fedora).
+  **Fix:** That is PEP 668 — install into a venv (`python3 -m venv .venv && .venv/bin/pip install mcp`) or use pipx, then point the registration command pair at the venv's python (e.g. `<clone-path>/.venv/bin/python <clone-path>/server.py`).
+
+- **Symptom:** On macOS, running `python3` prompts to install Command Line Tools, or `pip` is missing.
+  **Fix:** Install Python via Homebrew (`brew install python`) and use that interpreter for `pip install mcp` and the registration command pair.
+
+- **Symptom:** `describe.sh: command not found` or "bash: No such file or directory" on Windows.
+  **Fix:** The script is a bash convenience and not part of the MCP path — use the MCP client route instead, or run it under Git Bash / WSL.
+
 ## Clients and Deployment
 
 - **Symptom:** The client fails to spawn the server on Windows ("command not found" / spawn error).
-  **Fix:** Use `python` (or the full path to `python.exe`) as the command, not `python3`, which usually does not exist on Windows.
+  **Fix:** Use `python` (or `py -3`) as the command, not `python3`, which usually does not exist on Windows. Install Python from python.org if `python` is missing.
 
 - **Symptom:** Errors look like normal tool output, so agents may "describe" an error string.
   **Fix:** All failures are returned as plain text in the tool result, never as protocol errors. Treat the `Error:` / `Skipped:` / `HTTP error` prefixes as failures when reading results.

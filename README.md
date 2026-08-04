@@ -44,6 +44,11 @@ opencode, and others. It runs on Linux, macOS, and Windows.
    The server works with both mcp 1.x (FastMCP) and mcp 2.x (MCPServer), so no
    version pin is needed.
 
+   > **Platform notes:**
+   > - **Windows:** install Python from [python.org](https://www.python.org/downloads/); use `python` (or `py -3`) instead of `python3` (see the note above).
+   > - **macOS:** install Python via Homebrew (`brew install python`) — the system `python3` may be a Command Line Tools stub or lack pip.
+   > - **Linux:** on distros with PEP 668 (Ubuntu 23.04+, Debian 12+, Fedora) `pip install` fails with "externally-managed-environment" — use a venv (`python3 -m venv .venv && .venv/bin/pip install mcp`) or pipx, and point the registration command at the venv's python.
+
 3. Register the server with your MCP client. Every client registers a stdio
    server as a `command` + `args` pair — for this project, always:
 

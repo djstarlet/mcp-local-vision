@@ -28,6 +28,11 @@ mcp 2.x (MCPServer) via an import shim — no version pin:
 pip install mcp
 ```
 
+> **Platform notes:**
+> - **Windows:** install Python from python.org; use `python` (or `py -3`) in registration commands, not `python3`.
+> - **macOS:** install Python via Homebrew (`brew install python`) — the system `python3` may be a Command Line Tools stub or lack pip.
+> - **Linux:** on distros with PEP 668 (Ubuntu 23.04+, Debian 12+, Fedora) `pip install` fails with "externally-managed-environment" — use a venv (`python3 -m venv .venv && .venv/bin/pip install mcp`) or pipx, and point the registration pair at the venv's python.
+
 ### 3. Create config.json
 
 Write `<clone-path>/config.json`:
