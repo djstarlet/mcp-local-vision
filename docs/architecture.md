@@ -8,67 +8,61 @@ tags: [mcp, vision, architecture, python, bash]
 
 This document describes the internal structure of mcp-local-vision: the layout, the request data flow, and the transport details that matter when extending or debugging the server. It is written for anyone modifying the code or diagnosing why a call fails.
 
-The whole project is one Python file (`server.py`, ~230 lines) plus two bash helpers. There is no framework — the MCP protocol is implemented by hand over stdio.
+The whole project is one Python file (`server.py`, ~150 lines) plus two bash helpers. The MCP protocol is handled by the official `mcp` Python SDK; `server.py` only registers one tool and calls the vision API with stdlib `urllib`.
 
 ## File Map
 
 | File | Role |
 |---|---|
-| `server.py` | The MCP server: config resolution, vision API client, stdio message loop |
-| `describe.sh` | Standalone CLI that calls the vision API directly (no MCP) |
+| `server.py` | The MCP server: config resolution, vision API client, tool registration via `MCPServer` |
+| `describe.sh` | Standalone CLI that calls the vision API directly — not part of the MCP path |
 | `start.sh` | Thin wrapper: `exec python3 .../server.py` — hardcoded path, machine-specific |
 | `config.json` | Machine-specific settings (gitignored) |
 | `config.json.example` | Template for `config.json` |
-| `INSTALL.md` | Agent-facing install instructions (clone, config, opencode registration) |
+| `INSTALL.md` | Agent-facing install instructions (clone, pip, config, registration) |
+| `docs/` | This documentation set (README, architecture, api, setup, gotchas) |
 
 ## Layer Overview
 
 `server.py` splits into three logical layers:
 
-1. **Config resolution** (module top, lines 12–23) — loads `config.json` from the repo directory, then applies env-var overrides (`VISION_API_URL`, `VISION_MODEL`, `VISION_MAX_TOKENS`, `VISION_TIMEOUT`).
-2. **Vision client** (`_image_dims`, `analyze_image`) — validates the image, base64-encodes it, builds the OpenAI-compatible payload, and calls the model via `curl` subprocess.
-3. **MCP transport** (`send`, `recv`, `main`) — newline-delimited JSON-RPC over stdio; implements `initialize`, `tools/list`, `tools/call`, and `shutdown`.
+1. **Dependency check + config resolution** (module top) — imports the `mcp` SDK with a version shim, loads `config.json` from the repo directory, then applies env-var overrides (`VISION_API_URL`, `VISION_MODEL`, `VISION_MAX_TOKENS`, `VISION_TIMEOUT`).
+2. **Vision client** (`_image_dims`, `analyze_image`) — validates the image, base64-encodes it, builds the OpenAI-compatible payload, and POSTs it with `urllib.request.urlopen` using a socket timeout. No temp file, no curl, no subprocess.
+3. **MCP transport** — the `mcp` SDK's stdio server (`MCPServer("local-vision")`); `@mcp.tool()` registers `vision_describe` and the SDK handles framing, the handshake, `tools/list`, `tools/call`, and `shutdown`.
 
 ## Request Data Flow
 
 A `vision_describe` call travels this path:
 
-1. The agent sends `tools/call` to opencode, which spawns/uses the server process and writes the JSON-RPC message to its stdin.
-2. `recv()` reads one newline-delimited JSON line from stdin.
-3. `main()` matches the method:
-   - `tools/list` → returns the `vision_describe` tool definition.
-   - `tools/call` → extracts `file_path` and `prompt`, calls `analyze_image()`.
-4. `analyze_image()`:
+1. The agent calls `vision_describe` in any MCP client (opencode, Claude Code, Codex, VS Code, Cline, Cursor). The client spawns `server.py` as a subprocess (if not already running) and speaks the standard MCP stdio protocol.
+2. The SDK runs the stdio server loop: it performs the `initialize` handshake, answers `tools/list` from the registered tools, and dispatches `tools/call` to the `vision_describe` handler.
+3. `analyze_image()`:
    - Verifies the file exists; returns an error string otherwise.
    - Runs `_image_dims()` (PIL-free PNG/JPEG header parse) and rejects images under 10×10 px or with an aspect ratio over 50:1 as likely corrupt.
    - Reads the file and base64-encodes it.
-   - Writes the JSON payload to `/tmp/mcp-vision-payload.json` — a temp file, not the command line, to avoid `argument list too long` on large images.
-   - Runs `curl -s --max-time <TIMEOUT> -d @/tmp/mcp-vision-payload.json <url>` via subprocess.
+   - Builds the OpenAI-compatible payload and POSTs it to `OBSERVER_URL` with `urllib.request.urlopen(..., timeout=TIMEOUT)`.
    - Parses the response and returns `message.content`, falling back to `message.reasoning_content` when `content` is empty (reasoning models put the answer there).
-5. The result string is wrapped in `{"type": "text", "text": ...}` and sent back as the tool result. Errors are returned as plain text strings inside the result — not as JSON-RPC errors.
+4. The SDK serializes the returned string as a text tool result and sends it back over stdio. Errors are returned as plain-text strings inside the result — not as protocol errors.
 
 ```text
-agent ──tools/call──▶ opencode ──stdio NDJSON──▶ server.py
-                                                  │
-                     ┌────────────────────────────┤
-                     ▼                            ▼
-              sanity checks            curl ──▶ llama-server (OpenAI API)
-              base64 encode                    (vision model + mmproj)
-                     │                            │
-                     └────────◀─── text description ─┘
-                     ▼
-              tool result text ──▶ opencode ──▶ agent
+agent ──tools/call──▶ any MCP client ──MCP stdio──▶ server.py (mcp SDK)
+                                                      │
+                       ┌──────────────────────────────┤
+                       ▼                              ▼
+                sanity checks               urllib POST ──▶ llama-server
+                base64 encode                     (OpenAI-compatible API)
+                       │                              │
+                       └──────────◀── text description ─┘
+                       ▼
+                tool result text ──▶ client ──▶ agent
 ```
 
 ## MCP Transport Details
 
-- **Framing:** newline-delimited JSON (NDJSON) on stdin/stdout — **not** the 4-byte length-prefixed framing used by the official MCP SDKs. This matches opencode's expectation, but clients that use the SDK framing will not work.
-- **Protocol version:** `2024-11-05`; capabilities advertise `tools` only.
-- **Server identity:** `local-vision` v1.0.0.
-- **First-message rule:** `main()` unconditionally treats the first message received as `initialize` and replies with the init result, regardless of its actual method. Every subsequent message goes through the dispatch loop.
-- **Notifications:** messages without an `id` are silently dropped.
-- **Unknown methods and tools** get a JSON-RPC error `-32601` ("Unknown method/tool").
-- **Shutdown:** a `shutdown` request returns `null` and breaks the loop, ending the process.
+- **Framing:** official MCP Python SDK stdio transport with standard MCP framing — interoperable with any MCP client. The old hand-rolled newline-delimited JSON transport no longer exists.
+- **SDK version shim:** `server.py` imports `MCPServer` from `mcp.server` (mcp ≥ 2.0, where FastMCP was renamed) and falls back to `FastMCP` from `mcp.server.fastmcp` (mcp 1.x). Both are aliased as `MCPServer`. If the `mcp` package is missing, the server prints an install hint to stderr and exits with code 1.
+- **Lifecycle:** the SDK handles `initialize`, `tools/list`, `tools/call`, `shutdown`, notifications, and error codes. `server.py` only registers `vision_describe` via `@mcp.tool()` and calls `mcp.run()`.
+- **Server identity:** `MCPServer("local-vision")`; protocol version and server version are SDK defaults.
 
 ## Vision API Payload
 
@@ -99,7 +93,7 @@ The request sent to the model endpoint mirrors the OpenAI chat-completions forma
 |---|---|---|
 | `MIN_DIM` | `10` | Images smaller than 10×10 px are skipped as corrupt/placeholder |
 | `MAX_RATIO` | `50` | Images with width/height ratio over 50:1 are skipped as corrupt |
-| `TIMEOUT` (subprocess) | `TIMEOUT + 20` | `subprocess.run` timeout is the curl timeout plus 20 s slack |
+| `TIMEOUT` | `180` (default) | Socket timeout passed to `urllib.request.urlopen` |
 
 ## See Also
 

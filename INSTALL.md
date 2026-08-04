@@ -19,7 +19,16 @@ If the user didn't include these, ask for them before proceeding.
 git clone https://github.com/djstarlet/mcp-local-vision.git <clone-path>
 ```
 
-### 2. Create config.json
+### 2. Install the Python dependency
+
+Python 3.10+ is required. The server works with both mcp 1.x (FastMCP) and
+mcp 2.x (MCPServer) via an import shim — no version pin:
+
+```bash
+pip install mcp
+```
+
+### 3. Create config.json
 
 Write `<clone-path>/config.json`:
 
@@ -32,7 +41,7 @@ Write `<clone-path>/config.json`:
 }
 ```
 
-### 3. Add to opencode.jsonc
+### 4. Add to opencode.jsonc
 
 Find the project's `opencode.jsonc` (or `.opencode.jsonc`) and add:
 
@@ -45,3 +54,34 @@ Find the project's `opencode.jsonc` (or `.opencode.jsonc`) and add:
   }
 }
 ```
+
+### 5. Register in other harnesses
+
+The server speaks the standard MCP stdio protocol, so it works in any MCP
+client. Register it with:
+
+- **Claude Code:**
+
+  ```bash
+  claude mcp add local-vision -- python3 <clone-path>/server.py
+  ```
+
+- **VS Code:** add a stdio entry to `.vscode/mcp.json`:
+
+  ```json
+  {
+    "servers": {
+      "local-vision": {
+        "type": "stdio",
+        "command": "python3",
+        "args": ["<clone-path>/server.py"]
+      }
+    }
+  }
+  ```
+
+- **Codex / Cline / Cursor / opencode:** use their MCP config UI or config
+  file with the same `command` + `args` pair.
+
+> **Note:** on Windows, use `python` (or the full path to `python.exe`) instead
+> of `python3` in every command above.

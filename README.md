@@ -21,14 +21,30 @@ provide your server URL and model alias when asked.
 
 ## Setup (manual)
 
+The server uses the official MCP Python SDK with standard stdio framing, so it
+works in **any MCP client** — Claude Code, Codex, VS Code, Cline, Cursor,
+opencode, and others. It runs on Linux, macOS, and Windows.
+
+> **Note:** on Windows, use `python` (or the full path to `python.exe`) instead
+> of `python3` in the commands below.
+
 1. Have a llama.cpp server running with a vision model (e.g. MiniCPM-V 4.6):
 
-   ```
+   ```bash
    ./llama-server -m model.gguf --mmproj mmproj.gguf \
      --host 0.0.0.0 --port 8080
    ```
 
-2. Add to your `opencode.jsonc`:
+2. Install the Python dependency (Python 3.10+):
+
+   ```bash
+   pip install mcp
+   ```
+
+   The server works with both mcp 1.x (FastMCP) and mcp 2.x (MCPServer), so no
+   version pin is needed.
+
+3. Add to your `opencode.jsonc`:
 
    ```jsonc
    "mcp": {
@@ -40,7 +56,11 @@ provide your server URL and model alias when asked.
    }
    ```
 
-3. Restart opencode. Now any agent can call `vision_describe`.
+   Other harnesses register the same server differently — see
+   [INSTALL.md](INSTALL.md) for one-liners (`claude mcp add ...`, VS Code
+   `.vscode/mcp.json`).
+
+4. Restart opencode. Now any agent can call `vision_describe`.
 
 ## Subagent access
 
@@ -81,3 +101,8 @@ All values can also be overridden via environment variables:
 | `VISION_MODEL` | `OBSERVER` | Model label (any value works for single-model servers) |
 | `VISION_MAX_TOKENS` | `2048` | Max response tokens |
 | `VISION_TIMEOUT` | `180` | API timeout in seconds |
+
+> **Note:** prefer `config.json` over environment variables. MCP clients spawn
+> the server as a subprocess with a minimal environment allow-list (PATH, HOME,
+> etc.), so custom variables like `VISION_API_URL` are not reliably inherited.
+> `config.json` is always read from the server's own directory.
