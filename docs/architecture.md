@@ -103,6 +103,6 @@ The request sent to the model endpoint mirrors the OpenAI chat-completions forma
 
 ## See Also
 
-- [README](README.md) — what the server is and how to use it
+- [README](../README.md) — what the server is and how to use it
 - [api](api.md) — tool definitions and configuration reference
 - [gotchas](gotchas.md) — known sharp edges in this design

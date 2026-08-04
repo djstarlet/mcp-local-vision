@@ -129,6 +129,6 @@ python3 server.py
 
 ## See Also
 
-- [README](README.md) — overview and quick start
+- [README](../README.md) — overview and quick start
 - [api](api.md) — configuration reference tables
 - [gotchas](gotchas.md) — setup-time pitfalls

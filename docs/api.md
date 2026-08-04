@@ -123,7 +123,7 @@ Prints the model's description to stdout. Exit code is non-zero if the file is m
 
 ## See Also
 
-- [README](README.md) — usage overview
+- [README](../README.md) — usage overview
 - [architecture](architecture.md) — request flow and payload details
 - [setup](setup.md) — install and verification
 - [gotchas](gotchas.md) — behavior to watch out for

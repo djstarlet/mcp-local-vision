@@ -57,6 +57,6 @@ This document collects the pitfalls, sharp edges, and known issues of mcp-local-
 
 ## See Also
 
-- [README](README.md) — what the server does
+- [README](../README.md) — what the server does
 - [api](api.md) — reference tables for tools and config
 - [setup](setup.md) — installation and verification steps
