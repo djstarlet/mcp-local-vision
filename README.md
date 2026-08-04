@@ -56,9 +56,16 @@ opencode, and others. It runs on Linux, macOS, and Windows.
    }
    ```
 
-   Other harnesses register the same server differently — see
-   [INSTALL.md](INSTALL.md) for one-liners (`claude mcp add ...`, VS Code
-   `.vscode/mcp.json`).
+   Other harnesses use the same `command` + `args` pair in their own format:
+
+   | Harness | Registration |
+   |---|---|
+   | Claude Code | `claude mcp add local-vision -- python3 /path/to/mcp-local-vision/server.py` |
+   | Codex | `codex mcp add local-vision -- python3 /path/to/mcp-local-vision/server.py` |
+   | VS Code | In `.vscode/mcp.json`: `{"servers": {"local-vision": {"type": "stdio", "command": "python3", "args": ["/path/to/mcp-local-vision/server.py"]}}}` |
+   | All other harnesses | Their MCP settings UI or config file — the same `command` + `args` pair (Cline, Cursor, Zed, ...) |
+
+   See [INSTALL.md](INSTALL.md) for the full agent-driven install.
 
 4. Restart opencode. Now any agent can call `vision_describe`.
 

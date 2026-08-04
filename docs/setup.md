@@ -51,7 +51,7 @@ Beyond the `mcp` package the server has no Python dependencies — the vision AP
 
    `vision_model` is only a label passed in the request body — for a single-model `llama-server` any value works. Set it to the model alias if you use a multi-model gateway.
 
-5. Register the MCP server in the project's `opencode.jsonc` (or `.opencode.jsonc`):
+5. Register the server with your MCP client. Every MCP client registers a stdio server the same way: a **`command`** plus **`args`** pair that spawns the server process. For this project the pair is always `python3 /path/to/mcp-local-vision/server.py` — everything else, config file shape or CLI syntax, is just that pair written in the client's own format. In `opencode.jsonc` (or `.opencode.jsonc`):
 
    ```jsonc
    "mcp": {
@@ -63,7 +63,15 @@ Beyond the `mcp` package the server has no Python dependencies — the vision AP
    }
    ```
 
-   For other harnesses, see the one-liners in [INSTALL.md](../INSTALL.md) (`claude mcp add ...`, VS Code `.vscode/mcp.json`).
+   | Harness | Registration |
+   |---|---|
+   | opencode | The `opencode.jsonc` block above |
+   | Claude Code | `claude mcp add local-vision -- python3 /path/to/mcp-local-vision/server.py` |
+   | Codex | `codex mcp add local-vision -- python3 /path/to/mcp-local-vision/server.py` |
+   | VS Code | In `.vscode/mcp.json`: `{"servers": {"local-vision": {"type": "stdio", "command": "python3", "args": ["/path/to/mcp-local-vision/server.py"]}}}` |
+   | All other harnesses | Their MCP settings UI or config file — the same `command` + `args` pair (Cline, Cursor, Zed, ...) |
+
+   Every harness on the market uses the same pair — if yours isn't listed, put `python3 /path/to/mcp-local-vision/server.py` into its MCP/stdio server settings. See [INSTALL.md](../INSTALL.md) for the full agent-driven install.
 
    > **Note:** on Windows, use `python` (or the full path to `python.exe`) as the command — `python3` usually does not exist there.
 
