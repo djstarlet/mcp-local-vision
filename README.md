@@ -7,7 +7,19 @@ LLaVA, etc.) through its OpenAI-compatible API.
 No special model config needed — agents just call `vision_describe("path.png")`
 and get back a text description from the vision model.
 
-## Setup
+## Install via your AI agent
+
+Tell your AI agent:
+
+```
+Install and configure mcp-local-vision -
+https://github.com/djstarlet/mcp-local-vision/src/branch/main/INSTALL.md
+```
+
+The agent will fetch INSTALL.md and walk through the steps. You'll need to
+provide your server URL and model alias when asked.
+
+## Setup (manual)
 
 1. Have a llama.cpp server running with a vision model (e.g. MiniCPM-V 4.6):
 
@@ -43,16 +55,6 @@ MCP tools. Add it to their config in `opencode.jsonc` or your agent preset:
 ```
 
 This lets the subagent call `vision_describe` via any configured MCP server.
-
-Tell your AI agent:
-
-```
-Install and configure mcp-local-vision -
-https://github.com/djstarlet/mcp-local-vision/src/branch/main/INSTALL.md
-```
-
-The agent will fetch INSTALL.md and walk through the steps. You'll need to
-provide your server URL and model alias when asked.
 
 ## Configuration
 
