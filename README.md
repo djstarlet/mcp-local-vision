@@ -7,6 +7,16 @@ LLaVA, etc.) through its OpenAI-compatible API.
 No special model config needed — agents just call `vision_describe("path.png")`
 and get back a text description from the vision model.
 
+## Dependencies
+
+- **Python 3.10+** — any OS (Linux, macOS, Windows)
+- **`mcp` package** — `pip install mcp` (works with both mcp 1.x and 2.x)
+- **llama.cpp server** with a vision model + its `--mmproj` projector, reachable
+  at `vision_api_url` (see [Configuration](#configuration))
+- **bash + curl** — only for the optional CLI scripts (`describe.sh`,
+  `start.sh`); Linux/macOS ship with bash, on **Windows use WSL or Git Bash**.
+  Not needed for MCP use.
+
 ## Install via your AI agent
 
 Tell your AI agent:
