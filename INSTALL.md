@@ -41,47 +41,34 @@ Write `<clone-path>/config.json`:
 }
 ```
 
-### 4. Add to opencode.jsonc
+### 4. Register the server with your MCP client
 
-Find the project's `opencode.jsonc` (or `.opencode.jsonc`) and add:
+Every MCP client registers a stdio server the same way: a **`command`** plus
+**`args`** pair that spawns the server process. For this project the pair is
+always:
 
-```jsonc
-"mcp": {
-  "local-vision": {
-    "type": "local",
-    "command": ["python3", "<clone-path>/server.py"],
-    "enabled": true
-  }
-}
+```text
+python3 <clone-path>/server.py
 ```
 
-### 5. Register in other harnesses
-
-The server speaks the standard MCP stdio protocol, so it works in any MCP
-client. Register it with:
-
-- **Claude Code:**
-
-  ```bash
-  claude mcp add local-vision -- python3 <clone-path>/server.py
-  ```
-
-- **VS Code:** add a stdio entry to `.vscode/mcp.json`:
-
-  ```json
-  {
-    "servers": {
-      "local-vision": {
-        "type": "stdio",
-        "command": "python3",
-        "args": ["<clone-path>/server.py"]
-      }
-    }
-  }
-  ```
-
-- **Codex / Cline / Cursor / opencode:** use their MCP config UI or config
-  file with the same `command` + `args` pair.
+Everything else — config file shape, CLI syntax — is just that pair written in
+the client's own format.
 
 > **Note:** on Windows, use `python` (or the full path to `python.exe`) instead
-> of `python3` in every command above.
+> of `python3` in the pair above and in every registration command below.
+
+| Harness | Registration |
+|---|---|
+| opencode | In `opencode.jsonc`: `"mcp": { "local-vision": { "type": "local", "command": ["python3", "<clone-path>/server.py"], "enabled": true } }` |
+| Claude Code | `claude mcp add local-vision -- python3 <clone-path>/server.py` |
+| VS Code | In `.vscode/mcp.json`: `{"servers": {"local-vision": {"type": "stdio", "command": "python3", "args": ["<clone-path>/server.py"]}}}` |
+| Codex / Cline / Cursor / Zed / others | Their MCP settings UI or config file — same `command` + `args` pair |
+
+Every harness on the market uses the same pair — if yours isn't listed, put
+`python3 <clone-path>/server.py` into its MCP/stdio server settings.
+
+### 5. Test it
+
+Restart or reload the MCP client, then ask any agent to call
+`vision_describe("<path to an image>")` and confirm a description comes back.
+For a scripted SDK-client smoke test, see [docs/setup.md](docs/setup.md).
