@@ -51,21 +51,11 @@ Beyond the `mcp` package the server has no Python dependencies — the vision AP
 
    `vision_model` is only a label passed in the request body — for a single-model `llama-server` any value works. Set it to the model alias if you use a multi-model gateway.
 
-5. Register the server with your MCP client. Every MCP client registers a stdio server the same way: a **`command`** plus **`args`** pair that spawns the server process. For this project the pair is always `python3 /path/to/mcp-local-vision/server.py` — everything else, config file shape or CLI syntax, is just that pair written in the client's own format. In `opencode.jsonc` (or `.opencode.jsonc`):
-
-   ```jsonc
-   "mcp": {
-     "local-vision": {
-       "type": "local",
-       "command": ["python3", "/path/to/mcp-local-vision/server.py"],
-       "enabled": true
-     }
-   }
-   ```
+5. Register the server with your MCP client. Every MCP client registers a stdio server the same way: a **`command`** plus **`args`** pair that spawns the server process. For this project the pair is always `python3 /path/to/mcp-local-vision/server.py` — everything else, config file shape or CLI syntax, is just that pair written in the client's own format:
 
    | Harness | Registration |
    |---|---|
-   | opencode | The `opencode.jsonc` block above |
+   | opencode | In `opencode.jsonc` (or `.opencode.jsonc`): `"mcp": { "local-vision": { "type": "local", "command": ["python3", "/path/to/mcp-local-vision/server.py"], "enabled": true } }` |
    | Claude Code | `claude mcp add local-vision -- python3 /path/to/mcp-local-vision/server.py` |
    | Codex | `codex mcp add local-vision -- python3 /path/to/mcp-local-vision/server.py` |
    | VS Code | In `.vscode/mcp.json`: `{"servers": {"local-vision": {"type": "stdio", "command": "python3", "args": ["/path/to/mcp-local-vision/server.py"]}}}` |

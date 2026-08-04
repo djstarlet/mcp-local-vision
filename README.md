@@ -44,22 +44,16 @@ opencode, and others. It runs on Linux, macOS, and Windows.
    The server works with both mcp 1.x (FastMCP) and mcp 2.x (MCPServer), so no
    version pin is needed.
 
-3. Add to your `opencode.jsonc`:
+3. Register the server with your MCP client. Every client registers a stdio
+   server as a `command` + `args` pair — for this project, always:
 
-   ```jsonc
-   "mcp": {
-     "local-vision": {
-       "type": "local",
-       "command": ["python3", "/path/to/mcp-local-vision/server.py"],
-       "enabled": true
-     }
-   }
+   ```text
+   python3 /path/to/mcp-local-vision/server.py
    ```
-
-   Other harnesses use the same `command` + `args` pair in their own format:
 
    | Harness | Registration |
    |---|---|
+   | opencode | In `opencode.jsonc`: `"mcp": { "local-vision": { "type": "local", "command": ["python3", "/path/to/mcp-local-vision/server.py"], "enabled": true } }` |
    | Claude Code | `claude mcp add local-vision -- python3 /path/to/mcp-local-vision/server.py` |
    | Codex | `codex mcp add local-vision -- python3 /path/to/mcp-local-vision/server.py` |
    | VS Code | In `.vscode/mcp.json`: `{"servers": {"local-vision": {"type": "stdio", "command": "python3", "args": ["/path/to/mcp-local-vision/server.py"]}}}` |
