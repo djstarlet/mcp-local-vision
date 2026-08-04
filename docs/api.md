@@ -6,19 +6,24 @@ tags: [mcp, vision, api, reference]
 
 # MCP Local Vision API Reference
 
-This document is the reference for the public surface of mcp-local-vision: the MCP tool it exposes, the JSON-RPC methods it answers, and every configuration option. Use it when wiring the server into a client, writing agent prompts, or tuning behavior.
+This document is the reference for the public surface of mcp-local-vision: the MCP tool it exposes, the protocol lifecycle, and every configuration option. Use it when wiring the server into a client, writing agent prompts, or tuning behavior.
 
-The server exposes exactly one tool, `vision_describe`, and a hand-rolled subset of the MCP lifecycle over stdio.
+The server exposes exactly one tool, `vision_describe`, registered with the official MCP Python SDK over stdio.
+
+## Requirements
+
+- **Python 3.10+** — the server uses `int | None` union syntax and `tuple[int, int]` generics.
+- **`mcp` package** — install with `pip install mcp`. No version pin: the import shim accepts both mcp 1.x (`FastMCP`) and mcp 2.x (`MCPServer`, the renamed `FastMCP`).
 
 ## Server Identity
 
 | Property | Value |
 |---|---|
 | Name | `local-vision` |
-| Version | `1.0.0` |
-| Protocol version | `2024-11-05` |
-| Transport | newline-delimited JSON over stdio |
-| Capabilities | `tools` only |
+| Version | SDK default (not set in code) |
+| Protocol version | SDK-negotiated (MCP 2024-11-05 line) |
+| Transport | official MCP SDK stdio (standard MCP framing) |
+| Capabilities | tools (auto-discovered from `@mcp.tool()`) |
 
 ## Tool: `vision_describe`
 
@@ -54,26 +59,22 @@ A tool result with a single text content item. The text is either the model's de
 
 ```json
 {
-  "jsonrpc": "2.0",
-  "id": 3,
-  "result": {
-    "content": [{"type": "text", "text": "The image shows... "}]
-  }
+  "content": [{"type": "text", "text": "The image shows... "}]
 }
 ```
 
+> **Note:** for reasoning models, the answer may arrive in `reasoning_content` rather than `content`. The server falls back to `reasoning_content` whenever `content` is empty.
+
 ## MCP Methods
 
-| Method | Request | Response |
+| Method | Handled by | Response |
 |---|---|---|
-| `initialize` | any first message | Server info: protocol `2024-11-05`, `serverInfo` `local-vision` v1.0.0 |
-| `tools/list` | — | List containing the `vision_describe` tool |
-| `tools/call` | `name: "vision_describe"`, `arguments: {file_path, prompt?}` | Text content with the description |
-| `shutdown` | — | `result: null`, then process exits |
-| notification (no `id`) | any | Silently ignored |
-| unknown method/tool | — | Error `-32601` `Unknown method: <m>` / `Unknown tool: <t>` |
-
-> **Note:** `main()` treats the *first* message as `initialize` unconditionally. If a client's first message is something else, the reply is still the init result; the real request is processed on the next message.
+| `initialize` | SDK | Protocol handshake (SDK-managed) |
+| `tools/list` | SDK, from `@mcp.tool()` | The `vision_describe` tool definition |
+| `tools/call` | `vision_describe` handler | Text content with the description |
+| `shutdown` | SDK | Graceful exit |
+| notifications / ping | SDK | SDK-managed |
+| unknown method/tool | SDK | JSON-RPC error |
 
 ## Error Behavior
 
@@ -85,8 +86,8 @@ A tool result with a single text content item. The text is either the model's de
 | Image smaller than 10×10 px | `Skipped: image too small (WxH) — likely corrupt or placeholder.` |
 | Aspect ratio > 50:1 | `Skipped: extreme aspect ratio (WxH) — likely corrupt.` |
 | File unreadable | `Error reading file: <e>` |
-| `curl` failed | `curl error (code <n>): <stderr>` |
-| API returned non-JSON | `API response parse error: <e>` + raw preview |
+| HTTP error (non-2xx) | `HTTP error (code N): <preview>` — first 300 chars of the response body |
+| API returned non-JSON | `API response parse error: <e>` |
 | Network/API exception | `Error calling vision API: <e>` |
 
 ## Configuration Reference
@@ -98,7 +99,9 @@ Settings resolve with precedence **env var > config.json > default**. `config.js
 | `vision_api_url` | `VISION_API_URL` | `http://localhost:8080/v1/chat/completions` | OpenAI-compatible chat completions endpoint |
 | `vision_model` | `VISION_MODEL` | `OBSERVER` | Model label in the request body; any value works for single-model llama.cpp servers |
 | `vision_max_tokens` | `VISION_MAX_TOKENS` | `2048` | Max response tokens |
-| `vision_timeout` | `VISION_TIMEOUT` | `180` | `curl --max-time` in seconds; subprocess timeout is this + 20 s |
+| `vision_timeout` | `VISION_TIMEOUT` | `180` | Socket timeout for the urllib request, in seconds |
+
+> **Note:** MCP clients spawn the server with a minimal environment allow-list, so env vars are not reliably inherited — prefer `config.json`.
 
 Example `config.json`:
 
@@ -113,7 +116,7 @@ Example `config.json`:
 
 ## Standalone CLI: `describe.sh`
 
-Sends the same request without the MCP layer. Reads the same `config.json` (falls back to env vars / defaults when absent).
+Sends the same request without the MCP layer. Reads the same `config.json` (falls back to env vars / defaults when absent). It is a convenience for testing the model endpoint — the MCP server never invokes it.
 
 ```bash
 ./describe.sh /path/to/image.png

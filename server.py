@@ -5,8 +5,22 @@ import json
 import sys
 import base64
 import struct
-import subprocess
 import os
+import urllib.request
+import urllib.error
+
+# ── Dependency check ───────────────────────────────────────────────
+# Works with mcp 1.x (FastMCP) and mcp 2.x (MCPServer — FastMCP was renamed).
+try:
+    from mcp.server import MCPServer  # mcp >= 2.0
+except ImportError:
+    try:
+        from mcp.server.fastmcp import FastMCP as MCPServer  # mcp 1.x
+    except ImportError:
+        print("Error: the 'mcp' package is required but not installed.", file=sys.stderr)
+        print("Install it with: pip install mcp", file=sys.stderr)
+        sys.exit(1)
+
 
 # ── Config ──────────────────────────────────────────────────────────
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
@@ -23,25 +37,7 @@ MAX_TOKENS = int(os.environ.get("VISION_MAX_TOKENS") or _config.get("vision_max_
 TIMEOUT = int(os.environ.get("VISION_TIMEOUT") or _config.get("vision_timeout", "180"))
 
 
-# ── MCP transport helpers ──────────────────────────────────────────
-# opencode uses newline-delimited JSON on stdio (NOT the 4-byte length-prefix format)
-
-def send(msg: dict):
-    """Send a JSON-RPC message line to stdout."""
-    data = json.dumps(msg, ensure_ascii=False)
-    sys.stdout.write(data + "\n")
-    sys.stdout.flush()
-
-
-def recv() -> dict | None:
-    """Read a JSON-RPC message line from stdin."""
-    line = sys.stdin.readline()
-    if not line:
-        return None
-    return json.loads(line.strip())
-
-
-# ── Vision API call ────────────────────────────────────────────────
+# ── Image dimension parser (dependency-free) ───────────────────────
 
 MIN_DIM = 10
 MAX_RATIO = 50
@@ -75,6 +71,9 @@ def _image_dims(path: str) -> tuple[int, int] | None:
     except Exception:
         return None
 
+
+# ── Vision API call ────────────────────────────────────────────────
+
 def analyze_image(file_path: str, prompt: str = "Describe this image in detail.") -> str:
     """Base64-encode an image and send to the vision model API."""
     if not os.path.isfile(file_path):
@@ -107,126 +106,41 @@ def analyze_image(file_path: str, prompt: str = "Describe this image in detail."
         }],
         "max_tokens": MAX_TOKENS,
         "reasoning_budget": 0
-    })
+    }).encode("utf-8")
 
     try:
-        # Write to temp file to avoid "argument list too long" on large base64
-        tmp = "/tmp/mcp-vision-payload.json"
-        with open(tmp, "w") as f:
-            f.write(payload)
-        r = subprocess.run(
-            ["curl", "-s", "--max-time", str(TIMEOUT),
-             OBSERVER_URL,
-             "-H", "Content-Type: application/json",
-             "-d", f"@{tmp}"],
-            capture_output=True, text=True, timeout=TIMEOUT + 20
+        request = urllib.request.Request(
+            OBSERVER_URL,
+            data=payload,
+            headers={"Content-Type": "application/json"},
         )
-        if r.returncode != 0:
-            return f"curl error (code {r.returncode}): {r.stderr[:200]}"
-        data = json.loads(r.stdout)
+        with urllib.request.urlopen(request, timeout=TIMEOUT) as resp:
+            body = resp.read()
+        data = json.loads(body)
         msg = data["choices"][0]["message"]
         content = msg.get("content", "")
         if not content:
             content = msg.get("reasoning_content", "")
         return content
+    except urllib.error.HTTPError as e:
+        preview = e.read().decode("utf-8", errors="replace")[:300]
+        return f"HTTP error (code {e.code}): {preview}"
     except json.JSONDecodeError as e:
-        preview = r.stdout[:300] if 'r' in dir() else "N/A"
-        return f"API response parse error: {e}\nRaw: {preview}"
+        return f"API response parse error: {e}"
     except Exception as e:
         return f"Error calling vision API: {e}"
 
 
-# ── MCP server loop ────────────────────────────────────────────────
+# ── MCP server ─────────────────────────────────────────────────────
 
-def main():
-    msg = recv()
-    if msg is None:
-        return
+mcp = MCPServer("local-vision")
 
-    # Respond to initialize
-    init_result = {
-        "jsonrpc": "2.0",
-        "id": msg.get("id", 0),
-        "result": {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {"tools": {}},
-            "serverInfo": {"name": "local-vision", "version": "1.0.0"}
-        }
-    }
-    send(init_result)
 
-    while True:
-        msg = recv()
-        if msg is None:
-            break
-        method = msg.get("method")
-        msg_id = msg.get("id")
-        params = msg.get("params", {})
-
-        if msg_id is None:  # notification
-            continue
-
-        if method == "tools/list":
-            send({
-                "jsonrpc": "2.0",
-                "id": msg_id,
-                "result": {
-                    "tools": [
-                        {
-                            "name": "vision_describe",
-                            "description": "Analyze an image using the local vision model. Returns a detailed description of the image contents.",
-                            "inputSchema": {
-                                "type": "object",
-                                "properties": {
-                                    "file_path": {
-                                        "type": "string",
-                                        "description": "Absolute path to the image file (PNG, JPG, etc.)"
-                                    },
-                                    "prompt": {
-                                        "type": "string",
-                                        "description": "Optional custom prompt. Default: 'Describe this image in detail.'"
-                                    }
-                                },
-                                "required": ["file_path"]
-                            }
-                        }
-                    ]
-                }
-            })
-
-        elif method == "tools/call":
-            tool_name = params.get("name")
-            args = params.get("arguments", {})
-
-            if tool_name == "vision_describe":
-                file_path = args.get("file_path", "")
-                prompt = args.get("prompt", "Describe this image in detail.")
-                result = analyze_image(file_path, prompt)
-                send({
-                    "jsonrpc": "2.0",
-                    "id": msg_id,
-                    "result": {
-                        "content": [{"type": "text", "text": result}]
-                    }
-                })
-            else:
-                send({
-                    "jsonrpc": "2.0",
-                    "id": msg_id,
-                    "error": {"code": -32601, "message": f"Unknown tool: {tool_name}"}
-                })
-
-        elif method == "shutdown":
-            send({"jsonrpc": "2.0", "id": msg_id, "result": None})
-            break
-
-        else:
-            send({
-                "jsonrpc": "2.0",
-                "id": msg_id,
-                "error": {"code": -32601, "message": f"Unknown method: {method}"}
-            })
+@mcp.tool()
+def vision_describe(file_path: str, prompt: str = "Describe this image in detail.") -> str:
+    """Analyze an image using the local vision model. Returns a detailed description of the image contents."""
+    return analyze_image(file_path, prompt)
 
 
 if __name__ == "__main__":
-    main()
+    mcp.run()
