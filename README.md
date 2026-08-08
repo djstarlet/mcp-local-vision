@@ -34,7 +34,22 @@ client can describe local images without anything leaving the machine.
 - **CLI helper.** `describe.sh` exercises the model endpoint without the MCP
   layer, handy for debugging.
 
-## Quick start
+
+## Install via an AI agent (Not recommended)
+AI agents may hallucinate during the install process and miss a step or misinterpret the installation instructions. Do this at your own risk.
+
+Tell your AI agent:
+
+```
+Install and configure mcp-local-vision -
+https://github.com/djstarlet/mcp-local-vision/blob/main/INSTALL.md
+```
+
+The agent will fetch [INSTALL.md](INSTALL.md) and walk through the steps.
+You'll need to provide your server URL and model alias when asked.
+
+
+## Manual install (Recommended)
 
 Requirements: Python 3.10+ on any OS (Linux, macOS, Windows), and a running
 llama.cpp server with a vision model (see step 3).
@@ -95,18 +110,6 @@ llama.cpp server with a vision model (see step 3).
 > - **Windows:** install Python from [python.org](https://www.python.org/downloads/).
 > - **macOS:** install Python via Homebrew (`brew install python`); the system `python3` may be a Command Line Tools stub or lack pip.
 > - **Linux:** on distros with PEP 668 (Ubuntu 23.04+, Debian 12+, Fedora) `pip install` fails with "externally-managed-environment"; use a venv (`python3 -m venv .venv && .venv/bin/pip install mcp`) or pipx, and point the registration pair at the venv's python.
-
-## Install via your AI agent
-
-Tell your AI agent:
-
-```
-Install and configure mcp-local-vision -
-https://github.com/djstarlet/mcp-local-vision/blob/main/INSTALL.md
-```
-
-The agent will fetch [INSTALL.md](INSTALL.md) and walk through the steps.
-You'll need to provide your server URL and model alias when asked.
 
 ## How it works
 
