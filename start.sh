@@ -1,2 +1,4 @@
 #!/bin/bash
-exec /usr/bin/python3 /home/youruser/projects/mcp-local-vision/server.py
+# start.sh — run the MCP server directly on stdio (for manual testing)
+DIR="$(cd "$(dirname "$0")" && pwd)"
+exec python3 "$DIR/server.py"

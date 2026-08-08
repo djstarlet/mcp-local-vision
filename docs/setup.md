@@ -79,8 +79,6 @@ Run llama.cpp with both the model and its vision projector (`--mmproj`):
   --host 0.0.0.0 --port 8080
 ```
 
-On this machine the backend is `llama-server-host` at `http://localhost:8080/v1/` with model `OBSERVER` (Qwen3.5-4B).
-
 > **Warning:** without `--mmproj` the server starts but rejects image content — `vision_describe` then returns the API's error text.
 
 ## Grant Subagent Access

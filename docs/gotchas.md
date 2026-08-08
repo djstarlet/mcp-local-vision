@@ -62,7 +62,7 @@ This document collects the pitfalls, sharp edges, and known issues of mcp-local-
   **Fix:** The backend returned non-JSON. Check `vision_api_url` for a typo and that the endpoint ends with `/v1/chat/completions`. The old raw-response preview was dropped with the urllib port.
 
 - **Symptom:** `start.sh` fails on a different machine.
-  **Fix:** It hardcodes `/usr/bin/python3` and `/home/youruser/projects/mcp-local-vision/server.py`. Register `python3 <path>/server.py` in the client instead of using this wrapper.
+  **Fix:** `start.sh` resolves its own directory and runs `python3 server.py` from there, so it works from any checkout as long as `python3` is on PATH. For MCP use, register `python3 <path>/server.py` in the client instead of the wrapper.
 
 - **Symptom:** Concern that upgrading `mcp` to 2.x will break the server.
   **Fix:** The import shim accepts both mcp 1.x (`FastMCP`) and 2.x (`MCPServer`). Don't pin a version — `pip install mcp` is the documented install.

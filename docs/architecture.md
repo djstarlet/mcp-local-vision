@@ -16,7 +16,7 @@ The whole project is one Python file (`server.py`, ~150 lines) plus two bash hel
 |---|---|
 | `server.py` | The MCP server: config resolution, vision API client, tool registration via `MCPServer` |
 | `describe.sh` | Standalone CLI that calls the vision API directly — not part of the MCP path |
-| `start.sh` | Thin wrapper: `exec python3 .../server.py` — hardcoded path, machine-specific |
+| `start.sh` | Thin wrapper: resolves its own directory and runs `python3 server.py` — portable, works from any checkout |
 | `config.json` | Machine-specific settings (gitignored) |
 | `config.json.example` | Template for `config.json` |
 | `INSTALL.md` | Agent-facing install instructions (clone, pip, config, registration) |
